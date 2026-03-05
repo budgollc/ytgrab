@@ -1,0 +1,12 @@
+# Ignore everything...
+*
+
+# ...except README
+!README.md
+
+# Always ignore these regardless
+!.gitignore
+node_modules/
+downloads/
+*.log
+.DS_Store
