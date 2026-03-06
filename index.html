@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YT Grab — YouTube Downloader</title>
+  <meta name="description" content="Download YouTube videos, audio, subtitles and thumbnails for free." />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --accent: #ff3f3f;
+      --accent2: #ff7a00;
+      --text: #f0f0f0;
+      --muted: #666;
+      --success: #00e676;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    header {
+      width: 100%;
+      padding: 2rem 2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 780px;
+      padding: 3rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* URL Input */
+    .input-row {
+      display: flex;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+      background: var(--surface);
+    }
+
+    .input-row:focus-within {
+      border-color: var(--accent);
+    }
+
+    #urlInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 1rem 1.2rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+    }
+
+    #urlInput::placeholder {
+      color: var(--muted);
+    }
+
+    /* Paste button */
+    #pasteBtn {
+      background: transparent;
+      border: none;
+      border-right: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 0 0.9rem;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    #pasteBtn:hover {
+      color: var(--accent2);
+    }
+
+    #pasteBtn title {
+      display: none;
+    }
+
+    #fetchBtn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: white;
+      padding: 0 1.8rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    #fetchBtn:hover {
+      opacity: 0.85;
+    }
+
+    #fetchBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Video info card */
+    #infoCard {
+      display: none;
+      margin-top: 2rem;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(16px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .info-top {
+      display: flex;
+      gap: 1.2rem;
+      padding: 1.2rem;
+    }
+
+    #thumbnail {
+      width: 140px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+      background: var(--border);
+    }
+
+    .info-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .info-meta h2 {
+      font-size: 0.95rem;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .info-meta p {
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* Download options */
+    .options {
+      padding: 1rem 1.2rem 1.2rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .opt-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      grid-column: 1 / -1;
+    }
+
+    .type-btn {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 0.6rem 0.8rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .type-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .type-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255, 63, 63, 0.06);
+    }
+
+    /* Quality section — grid-column span, shown/hidden via display property */
+    .quality-section {
+      grid-column: 1 / -1;
+      margin-top: 0.2rem;
+    }
+
+    .quality-section.hidden {
+      display: none;
+    }
+
+    #qualitySelect {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.8rem;
+      border-radius: 3px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      cursor: pointer;
+      margin-top: 0.4rem;
+    }
+
+    #qualitySelect:focus {
+      border-color: var(--accent);
+    }
+
+    #downloadBtn {
+      grid-column: 1 / -1;
+      margin-top: 0.4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: white;
+      padding: 0.85rem;
+      border-radius: 3px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    #downloadBtn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    #downloadBtn:active {
+      transform: translateY(0);
+    }
+
+    #downloadBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Status */
+    #status {
+      margin-top: 1.2rem;
+      padding: 0.8rem 1rem;
+      border-radius: 3px;
+      font-size: 0.85rem;
+      display: none;
+      animation: slideUp 0.2s ease;
+    }
+
+    #status.error {
+      background: rgba(255, 63, 63, 0.1);
+      border: 1px solid rgba(255, 63, 63, 0.3);
+      color: #ff8080;
+    }
+
+    #status.success {
+      background: rgba(0, 230, 118, 0.08);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+      color: var(--success);
+    }
+
+    #status.loading {
+      background: rgba(255, 122, 0, 0.08);
+      border: 1px solid rgba(255, 122, 0, 0.25);
+      color: var(--accent2);
+    }
+
+    /* Download history */
+    #history {
+      margin-top: 2.5rem;
+    }
+
+    #history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+
+    #history-header h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    #clearHistoryBtn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+
+    #clearHistoryBtn:hover {
+      color: var(--accent);
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin-bottom: 0.5rem;
+      animation: slideUp 0.2s ease;
+      gap: 0.5rem;
+    }
+
+    .history-item .h-name {
+      font-size: 0.82rem;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-item .h-size {
+      font-size: 0.72rem;
+      color: var(--success);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .history-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .history-item a:hover {
+      color: var(--accent2);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255, 122, 0, 0.3);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+      z-index: 1;
+      position: relative;
+    }
+
+    /* ── Dev Tag ──────────────────────────────────────────── */
+    .dev-tag {
+      position: fixed;
+      bottom: 1.8rem;
+      right: 1.8rem;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      padding: 0.5rem 1.1rem;
+      border-radius: 999px;
+
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-decoration: none;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .dev-tag:hover {
+      background: rgba(255, 63, 63, 0.06);
+      border-color: var(--accent);
+      color: var(--text);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(255, 63, 63, 0.15), inset 0 0 0 1px rgba(255, 63, 63, 0.15);
+    }
+
+    .dev-by {
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .creator-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      display: inline-block;
+    }
+
+    .dev-tag:hover .creator-name {
+      transform: scale(1.08);
+      filter: brightness(1.2);
+    }
+
+    .warning-symbol {
+      display: inline-block;
+      font-size: 0.72rem;
+      color: var(--accent);
+      transition: transform 0.35s ease;
+      line-height: 1;
+    }
+
+    .dev-tag:hover .warning-symbol {
+      transform: scale(1.4) rotate(180deg);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div>
+      <div class="logo">YT GRAB</div>
+      <div class="tagline">Video · Audio · Subs · Thumbnails</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="input-row">
+      <button id="pasteBtn" title="Paste from clipboard" aria-label="Paste URL from clipboard"><i
+          class="fa-regular fa-clipboard"></i></button>
+      <input id="urlInput" type="text" placeholder="Paste a YouTube URL here…" autocomplete="off"
+        aria-label="YouTube URL" />
+      <button id="fetchBtn" onclick="fetchInfo()">FETCH</button>
+    </div>
+
+    <div id="infoCard">
+      <div class="info-top">
+        <img id="thumbnail" src="" alt="Video thumbnail" />
+        <div class="info-meta">
+          <h2 id="videoTitle">—</h2>
+          <p id="videoMeta">—</p>
+        </div>
+      </div>
+
+      <div class="options">
+        <div class="opt-label">Download Type</div>
+        <button class="type-btn active" id="btn-mp4" onclick="setType('mp4', this)"><i class="fa-solid fa-film"></i>
+          Video (MP4)</button>
+        <button class="type-btn" id="btn-mp3" onclick="setType('mp3', this)"><i class="fa-solid fa-music"></i> Audio
+          (MP3)</button>
+        <button class="type-btn" id="btn-subtitles" onclick="setType('subtitles', this)"><i
+            class="fa-solid fa-closed-captioning"></i> Subtitles</button>
+        <button class="type-btn" id="btn-thumbnail" onclick="setType('thumbnail', this)"><i
+            class="fa-regular fa-image"></i> Thumbnail</button>
+
+        <div class="quality-section" id="qualitySection">
+          <div class="opt-label" style="margin-top:0.6rem">Quality</div>
+          <select id="qualitySelect">
+            <option value="720" selected>720p (HD)</option>
+          </select>
+        </div>
+
+        <button id="downloadBtn" onclick="startDownload()">DOWNLOAD</button>
+      </div>
+    </div>
+
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <div id="history" style="display:none">
+      <div id="history-header">
+        <h3>Downloaded Files</h3>
+        <button id="clearHistoryBtn" onclick="clearHistory()">Clear</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </main>
+
+  <footer>|For personal use only| · |Respect copyright and YouTube's Terms of Service|</footer>
+
+  <!-- Dev Tag -->
+  <a class="dev-tag" href="https://buymeacoffee.com/okimoov" target="_blank" rel="noopener noreferrer"
+    aria-label="Developed by K!MO — Buy me a coffee">
+    <span class="warning-symbol" aria-hidden="true">⚠︎</span>
+    <span class="dev-by">Dev. by</span>
+    <span class="creator-name">K!MO</span>
+    <span class="warning-symbol" aria-hidden="true">⚠︎</span>
+  </a>
+
+
+
+
+
+  <script>
+    let currentType = 'mp4';
+    let isFetching = false;
+    let isDownloading = false;
+
+    // ——————————————————
+    // Utility: escape HTML to prevent XSS in dynamically inserted content
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Utility: validate YouTube URL on the client before sending to server
+    function isYouTubeUrl(url) {
+      try {
+        const u = new URL(url);
+        return ['www.youtube.com', 'youtube.com', 'youtu.be', 'm.youtube.com'].includes(u.hostname);
+      } catch { return false; }
+    }
+
+    // Utility: format bytes to human-readable
+    function fmtBytes(bytes) {
+      if (!bytes) return '';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ——————————————————
+    function setType(type, btn) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Fix: quality section lives outside display:contents, toggle via class
+      const qs = document.getElementById('qualitySection');
+      if (type === 'mp4') {
+        qs.classList.remove('hidden');
+      } else {
+        qs.classList.add('hidden');
+      }
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.style.display = 'block';
+      el.className = type;
+      // Loading uses spinner; other states display sanitized text
+      el.innerHTML = type === 'loading'
+        ? `<span class="spinner"></span>${escHtml(msg)}`
+        : escHtml(msg);
+    }
+
+    function hideStatus() {
+      document.getElementById('status').style.display = 'none';
+    }
+
+    // ——————————————————
+    async function fetchInfo() {
+      if (isFetching) return;
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) return showStatus('Please enter a YouTube URL.', 'error');
+      if (!isYouTubeUrl(url)) return showStatus('That doesn\'t look like a valid YouTube URL.', 'error');
+
+      isFetching = true;
+      const btn = document.getElementById('fetchBtn');
+      btn.disabled = true;
+      showStatus('Fetching video info…', 'loading');
+
+      try {
+        const res = await fetch('/api/info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not fetch video info.');
+
+        document.getElementById('thumbnail').src = data.thumbnail || '';
+        document.getElementById('videoTitle').textContent = data.title || 'Unknown title';
+        document.getElementById('videoMeta').textContent =
+          [data.uploader, data.duration, data.view_count != null ? (data.view_count).toLocaleString() + ' views' : null]
+            .filter(Boolean).join(' · ');
+
+        // Populate quality dropdown from real formats returned by server
+        const sel = document.getElementById('qualitySelect');
+        if (data.formats && data.formats.length) {
+          sel.innerHTML = data.formats.map(f =>
+            `<option value="${escHtml(String(f.height))}">${escHtml(String(f.height))}p${f.fps > 30 ? ` ${escHtml(String(f.fps))}fps` : ''}</option>`
+          ).join('');
+        } else {
+          // Fallback static list if formats unavailable
+          sel.innerHTML = `
+          <option value="1080">1080p (Full HD)</option>
+          <option value="720" selected>720p (HD)</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>`;
+        }
+
+        document.getElementById('infoCard').style.display = 'block';
+        hideStatus();
+      } catch (e) {
+        showStatus(e.message || 'Could not fetch video info.', 'error');
+      } finally {
+        btn.disabled = false;
+        isFetching = false;
+      }
+    }
+
+    // ——————————————————
+    async function startDownload() {
+      if (isDownloading) return;
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url || !isYouTubeUrl(url)) return;
+
+      const quality = document.getElementById('qualitySelect').value;
+      const btn = document.getElementById('downloadBtn');
+      btn.disabled = true;
+      isDownloading = true;
+
+      const typeLabels = { mp4: 'video', mp3: 'audio', subtitles: 'subtitles', thumbnail: 'thumbnail' };
+      showStatus(`Downloading ${typeLabels[currentType] || currentType}… this may take a moment.`, 'loading');
+
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, type: currentType, quality })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Download failed.');
+        if (!data.filename || !data.url) throw new Error('Server returned an incomplete response.');
+
+        showStatus(`✓ Download complete: ${escHtml(data.filename)}`, 'success');
+        addHistory(data.filename, data.url, data.size);
+      } catch (e) {
+        showStatus(e.message || 'Download failed.', 'error');
+      } finally {
+        btn.disabled = false;
+        isDownloading = false;
+      }
+    }
+
+    // ——————————————————
+    function addHistory(filename, fileUrl, size) {
+      const historyEl = document.getElementById('history');
+      const list = document.getElementById('historyList');
+      historyEl.style.display = 'block';
+
+      const item = document.createElement('div');
+      item.className = 'history-item';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'h-name';
+      nameSpan.title = filename;
+      nameSpan.textContent = filename;
+
+      const sizeSpan = document.createElement('span');
+      sizeSpan.className = 'h-size';
+      sizeSpan.textContent = fmtBytes(size);
+
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = filename;
+      link.textContent = 'SAVE FILE →';
+
+      item.appendChild(nameSpan);
+      item.appendChild(sizeSpan);
+      item.appendChild(link);
+      list.prepend(item);
+    }
+
+    function clearHistory() {
+      document.getElementById('historyList').innerHTML = '';
+      document.getElementById('history').style.display = 'none';
+    }
+
+    // ——————————————————
+    // Paste from clipboard
+    document.getElementById('pasteBtn').addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById('urlInput').value = text;
+        document.getElementById('urlInput').focus();
+      } catch {
+        // Clipboard access denied — focus input so user can paste manually
+        document.getElementById('urlInput').focus();
+      }
+    });
+
+    // Allow Enter key to fetch (guarded against re-entry)
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !isFetching) fetchInfo();
+    });
+  </script>
+</body>
+
+</html>
