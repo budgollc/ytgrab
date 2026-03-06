@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YT Grab — YouTube Downloader</title>
   <meta name="description" content="Download YouTube videos, audio, subtitles and thumbnails for free." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23ff3f3f'/%3E%3Cpolygon points='13%2C10%2013%2C22%2023%2C16' fill='white'/%3E%3C/svg%3E" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -623,6 +624,14 @@
         .replace(/'/g, '&#39;');
     }
 
+    // Returns true when the page is served by the local Express server
+    function isLocalServer() {
+      const h = window.location.hostname;
+      return h === 'localhost' || h === '127.0.0.1' || h === '::1';
+    }
+
+    const NOT_LOCAL_MSG = 'This app requires a local server. Run \u201Cnpm start\u201D and open http://localhost:3000 \u2014 see README for setup.';
+
     // Utility: validate YouTube URL on the client before sending to server
     function isYouTubeUrl(url) {
       try {
@@ -669,6 +678,7 @@
     // ——————————————————
     async function fetchInfo() {
       if (isFetching) return;
+      if (!isLocalServer()) return showStatus(NOT_LOCAL_MSG, 'error');
       const url = document.getElementById('urlInput').value.trim();
       if (!url) return showStatus('Please enter a YouTube URL.', 'error');
       if (!isYouTubeUrl(url)) return showStatus('That doesn\'t look like a valid YouTube URL.', 'error');
@@ -721,6 +731,7 @@
     // ——————————————————
     async function startDownload() {
       if (isDownloading) return;
+      if (!isLocalServer()) return showStatus(NOT_LOCAL_MSG, 'error');
       const url = document.getElementById('urlInput').value.trim();
       if (!url || !isYouTubeUrl(url)) return;
 
