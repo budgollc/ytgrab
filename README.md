@@ -1,5 +1,5 @@
 # YT Grab - YouTube Downloader
-<img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="Screenshot 2026 03 05 at 4 04 47 PM" border="0">
+<img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="Screenshot 2026 03 05 at 4 04 47 PM" border="0"><a href="https://budgollc.github.io/ytgrab/">
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?style=flat-square&logo=node.js&logoColor=white)
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-ff0000?style=flat-square&logo=youtube&logoColor=white)
