@@ -1,4 +1,4 @@
-# YT Grab — YouTube Downloader
+# YT Grab - YouTube Downloader
 <img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="Screenshot 2026 03 05 at 4 04 47 PM" border="0">
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?style=flat-square&logo=node.js&logoColor=white)
