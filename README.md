@@ -1,5 +1,5 @@
 # YT Grab - YouTube Downloader
-[![YTG](https://budgollc.github.io/ytgrab)](https://budgollc.github.io/ytgrab)
+[![YTGrab](https://img.shields.io/badge/Project-YTGrab-black?style=for-the-badge&logo=youtube)](https://budgollc.github.io/ytgrab)
 <img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="YTGrab" border="0">
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?style=flat-square&logo=node.js&logoColor=white)
