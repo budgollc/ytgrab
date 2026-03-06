@@ -624,14 +624,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Returns true when the page is served by the local Express server
-    function isLocalServer() {
-      const h = window.location.hostname;
-      return h === 'localhost' || h === '127.0.0.1' || h === '::1';
-    }
-
-    const NOT_LOCAL_MSG = 'This app requires a local server. Run \u201Cnpm start\u201D and open http://localhost:3000 \u2014 see README for setup.';
-
     // Utility: validate YouTube URL on the client before sending to server
     function isYouTubeUrl(url) {
       try {
@@ -678,7 +670,6 @@
     // ——————————————————
     async function fetchInfo() {
       if (isFetching) return;
-      if (!isLocalServer()) return showStatus(NOT_LOCAL_MSG, 'error');
       const url = document.getElementById('urlInput').value.trim();
       if (!url) return showStatus('Please enter a YouTube URL.', 'error');
       if (!isYouTubeUrl(url)) return showStatus('That doesn\'t look like a valid YouTube URL.', 'error');
@@ -731,7 +722,6 @@
     // ——————————————————
     async function startDownload() {
       if (isDownloading) return;
-      if (!isLocalServer()) return showStatus(NOT_LOCAL_MSG, 'error');
       const url = document.getElementById('urlInput').value.trim();
       if (!url || !isYouTubeUrl(url)) return;
 
