@@ -1,7 +1,8 @@
 # YT Grab - YouTube Downloader
-[![YTGrab](https://img.shields.io/badge/Project-YTGrab-black?style=for-the-badge&logo=youtube)](https://budgollc.github.io/ytgrab)
+
 <img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="YTGrab" border="0">
 
+[![Open YTGrab](https://img.shields.io/badge/Open-YTGrab-red?style=for-the-badge&logo=youtube)](https://budgollc.github.io/ytgrab)
 ![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?style=flat-square&logo=node.js&logoColor=white)
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-ff0000?style=flat-square&logo=youtube&logoColor=white)
 ![License](https://img.shields.io/badge/license-Personal%20Use-lightgrey?style=flat-square)
