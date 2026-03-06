@@ -124,5 +124,5 @@ pip install -U yt-dlp
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by <a href="https://buymeacoffee.com/okimoov"><strong>K!MO</strong></a></sub>
+  <sub>Built with ☮︎ by <a href="https://buymeacoffee.com/okimoov"><strong>K!MO</strong></a></sub>
 </div>
