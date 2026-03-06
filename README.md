@@ -1,6 +1,6 @@
 # YT Grab - YouTube Downloader
-![YTG](https://budgollc.github.io/ytgrab)
-<img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="Screenshot 2026 03 05 at 4 04 47 PM" border="0">
+[![YTG](https://budgollc.github.io/ytgrab)](https://budgollc.github.io/ytgrab)
+<img src="https://i.ibb.co/PJRH4mM/Screenshot-2026-03-05-at-4-04-47-PM.png" alt="YTGrab" border="0">
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16%2B-339933?style=flat-square&logo=node.js&logoColor=white)
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-ff0000?style=flat-square&logo=youtube&logoColor=white)
@@ -10,7 +10,7 @@
 ![Made by K!MO](https://img.shields.io/badge/dev-K!MO-e25555?style=flat-square)
 
 > A sleek, self-hosted web app to download YouTube videos, audio, subtitles,
-> and thumbnails — straight from your browser.
+> and thumbnails - straight from your browser.
 
 ---
 
