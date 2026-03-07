@@ -609,15 +609,23 @@
 
 
   <script>
-    // When deployed to GitHub Pages (or any static host), there is no backend.
-    // Set API_BASE to the URL of a running ytgrab server, e.g.:
-    //   const API_BASE = 'http://localhost:3000';
-    // Leave as empty string to use the current origin (default when self-hosting).
-    const API_BASE = '';
-
     let currentType = 'mp4';
     let isFetching = false;
     let isDownloading = false;
+    const API_BASE = (() => {
+      if (!location.hostname.endsWith('github.io')) return '';
+      const qsApi = new URLSearchParams(location.search).get('api');
+      if (qsApi) {
+        localStorage.setItem('ytgrabApiBase', qsApi);
+        return qsApi;
+      }
+      return localStorage.getItem('ytgrabApiBase') || 'http://localhost:3000';
+    })();
+
+    // Keep endpoint composition in one place so hosting changes are easy.
+    function apiUrl(path) {
+      return `${API_BASE}${path}`;
+    }
 
     // ——————————————————
     // Show a banner when the app is opened on a static host (no backend available)
@@ -695,6 +703,32 @@
       document.getElementById('status').style.display = 'none';
     }
 
+    async function parseApiResponse(res) {
+      const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      let data = null;
+
+      if (contentType.includes('application/json')) {
+        try { data = JSON.parse(raw); } catch { }
+      } else {
+        // Some hosts (like static pages) return HTML error pages; keep parsing defensive.
+        try { data = JSON.parse(raw); } catch { }
+      }
+
+      if (!res.ok) {
+        if (res.status === 405 && location.hostname.endsWith('github.io')) {
+          throw new Error(`This page is static on GitHub Pages. Start backend API locally, then set ?api=http://localhost:PORT (current: ${API_BASE}).`);
+        }
+        throw new Error((data && data.error) || `Request failed (${res.status}).`);
+      }
+
+      if (!data) {
+        throw new Error('Server returned non-JSON content. Make sure the backend API is running at http://localhost:3000.');
+      }
+
+      return data;
+    }
+
     // ——————————————————
     async function fetchInfo() {
       if (isFetching) return;
@@ -707,15 +741,13 @@
       btn.disabled = true;
       showStatus('Fetching video info…', 'loading');
 
-      try {
-        const res = await fetch(`${API_BASE}/api/info`, {
+            try {
+        const res = await fetch(apiUrl('/api/info'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
-        let data = {};
-        try { data = await res.json(); } catch (e) { console.error('Non-JSON response from /api/info:', e); }
-        if (!res.ok) throw new Error(data.error || (res.status === 405 ? `Backend server not reachable. Run npm start and open ${API_BASE || 'http://localhost:3000'}` : 'Could not fetch video info.'));
+        const data = await parseApiResponse(res);
 
         document.getElementById('thumbnail').src = data.thumbnail || '';
         document.getElementById('videoTitle').textContent = data.title || 'Unknown title';
@@ -762,15 +794,13 @@
       const typeLabels = { mp4: 'video', mp3: 'audio', subtitles: 'subtitles', thumbnail: 'thumbnail' };
       showStatus(`Downloading ${typeLabels[currentType] || currentType}… this may take a moment.`, 'loading');
 
-      try {
-        const res = await fetch(`${API_BASE}/api/download`, {
+            try {
+        const res = await fetch(apiUrl('/api/download'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, type: currentType, quality })
         });
-        let data = {};
-        try { data = await res.json(); } catch (e) { console.error('Non-JSON response from /api/download:', e); }
-        if (!res.ok) throw new Error(data.error || (res.status === 405 ? `Backend server not reachable. Run npm start and open ${API_BASE || 'http://localhost:3000'}` : 'Download failed.'));
+        const data = await parseApiResponse(res);
         if (!data.filename || !data.url) throw new Error('Server returned an incomplete response.');
 
         showStatus(`✓ Download complete: ${escHtml(data.filename)}`, 'success');

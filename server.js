@@ -192,7 +192,29 @@ app.post("/api/download", (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`✅ YT Grab running at http://localhost:${PORT}`)
-);
+const BASE_PORT = Number(process.env.PORT) || 3000;
+const MAX_PORT_TRIES = 10;
+
+function startServer(port, triesLeft) {
+  const server = app.listen(port, () => {
+    console.log(`✅ YT Grab running at http://localhost:${port}`);
+  });
+
+  server.on("error", (err) => {
+    if (err.code !== "EADDRINUSE") {
+      console.error("❌ Failed to start server:", err.message);
+      process.exit(1);
+    }
+
+    if (triesLeft <= 0) {
+      console.error(`❌ No free port found from ${BASE_PORT} to ${BASE_PORT + MAX_PORT_TRIES}.`);
+      process.exit(1);
+    }
+
+    const nextPort = port + 1;
+    console.warn(`⚠️ Port ${port} is busy, trying ${nextPort}...`);
+    startServer(nextPort, triesLeft - 1);
+  });
+}
+
+startServer(BASE_PORT, MAX_PORT_TRIES);
